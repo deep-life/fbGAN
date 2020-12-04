@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import rc
 import seaborn as sns
+import numpy as np
 
 
 #Plot style
@@ -42,3 +43,24 @@ def plot_history(history,name):
     axs[1].legend(['train', 'test'], loc='upper left')
     plt.show()
 
+
+
+def plot_fbGAN_history(history, scores):
+    raise ValueError('Not finished implementing, please try again soon.')
+    colors = ['navy', 'darkmagenta', 'green', 'gold', 'indianred','silver','olivedrab', 'sandybrown' ]
+
+    scores = np.array(scores)
+    features = scores[0,:,0]
+
+    fig, ax = plt.subplots()
+
+    for i,feature in enumerate(features):
+        scr = scores[:, i,1].astype(float)
+
+        ax.plot(np.arange(len(scores)), scr, label = f'{feature}: average score' , color = colors[i,0])
+
+        ax.set_xlabel('Steps')
+        ax.set_ylabel('Score (%)')
+        ax.legend()
+        ax.set_title('Score history')
+    plt.show()

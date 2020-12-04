@@ -24,7 +24,7 @@ MAX_LEN_FB = 128  # length of max sequence we want to consider for training
 n_tags = 8  # number of classes in 8-state prediction
 n_words = 8
 
-# UPDATE THE PATHS #
+# UPDATE THE PATHS
 
 # Select a path where your data are stores
 PATH_DATA = '/drive/MyDrive/Colab Notebooks/FB-GAN_496/data/2018-06-06-ss.cleaned.csv'
