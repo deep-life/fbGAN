@@ -30,9 +30,7 @@ n_words = 8
 # dataset can be downloaded from here: https://www.kaggle.com/alfrandom/protein-secondary-structure
 PATH_DATA = '2018-06-06-ss.cleaned.csv'
 
-# Select paths to the saved weights of the gan and feedback
-PATH_GAN = 'Weights/gan'
-PATH_G = os.path.join(PATH_GAN, 'G243')
-PATH_D = os.path.join(PATH_GAN, 'D243')
-
-PATH_FB = 'Weights/feedback'
+# Select paths to the saved weights of the GAN and feedback
+PATH_G = 'Weights/Generator'
+PATH_D = 'Weights/Discriminator'
+PATH_FB = 'Weights/Feedback'
