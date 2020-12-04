@@ -8,7 +8,7 @@ from utils.protein_utilities import DNA_to_protein
 from utils.data_utilities import get_data_for_feedback, triplets, OneHot_Seq
 
 
-class GAN_FBNet():
+class FB_GAN():
 
     def __init__(self, generator_path=None, discriminator_path=None,
                  fbnet_path=None, features=DESIRED_FEATURES, multip_factor=20):
