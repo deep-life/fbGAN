@@ -22,7 +22,6 @@ NOISE_SHAPE = 128
 
 MAX_LEN_FB = 128  # max length of sequence we want to consider for training
 n_tags = 8  # number of classes in 8-state prediction
-n_words = 8
 
 # UPDATE THE PATHS
 
