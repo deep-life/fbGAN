@@ -1,10 +1,12 @@
 import tensorflow as tf
+import pandas as pd
 from tensorflow.keras.layers import Conv1D, Input, Dense, Reshape, ReLU, Permute
 from tensorflow.keras.layers import Conv1D, Input, LSTM, Embedding, Dense, TimeDistributed, Bidirectional, \
     LayerNormalization
+from sklearn.preprocessing import MultiLabelBinarizer
 from tensorflow.keras.models import Model
 from globals import *
-
+from utils.data_utilities import *
 
 def softmax(logits):
     shape = tf.shape(logits)
@@ -57,7 +59,7 @@ class Generator(tf.keras.Model):
 
 class Discriminator(tf.keras.Model):
 
-    def __init__(self, clip=1):
+    def __init__(self):
         """
         Implementation of Discriminator
         :param clip: value to which you clip the gradients (or False)
@@ -78,7 +80,7 @@ class Discriminator(tf.keras.Model):
         self.model.add(Dense(units=DIM * SEQ_LENGTH))
         self.model.add(Dense(units=1))
 
-    def call(self, inputs, training=False):
+    def call(self, inputs):
         """
         model's forward pass
         :param X: input of the size [batch_size, seq_length];
@@ -90,7 +92,17 @@ class Discriminator(tf.keras.Model):
 
 
 class Feedback():
-    def __init__(self):
+    def __init__(self,PATH_FB=None):
+        """
+
+        :param PATH_FB: path where pretrained model is saved;
+         if no parameter is given, model is initialized from scratch
+        """
+        if PATH_FB:
+            self.model = tf.keras.models.load_model(PATH_FB)
+            return
+        self.X_train, self.X_test, self.y_train, self.y_test, self.tokenizer = self.get_data_for_feedback()
+        self.n_words = len(self.tokenizer.word_index) + 1
         input = Input(shape=(MAX_LEN_PROTEIN,))
         x = Embedding(input_dim=n_words, output_dim=128, input_length=MAX_LEN_PROTEIN)(input)
         x = LayerNormalization()(x)
@@ -104,7 +116,21 @@ class Feedback():
         self.model.compile(optimizer=OPTIM, loss=LOSS, metrics=[tf.keras.metrics.Precision(),
                                                                 tf.keras.metrics.Recall(),
                                                                 tf.keras.metrics.Hinge()])
-        history = self.model.fit(X_train, y_train, batch_size=BATCH_SIZE, epochs=EPOCHS,
-                                 validation_data=(X_test, y_test), verbose=1)
-        self.model.save(save_feedback)
+
+        history = self.model.fit(self.X_train, self.y_train, batch_size=BATCH_SIZE, epochs=EPOCHS,
+                                 validation_data=(self.X_test, self.y_test), verbose=1)
+        self.model.save(PATH_FB)
         return history
+
+    def get_data_for_feedback(self):
+        df = pd.read_csv(PATH_DATA)
+        input_seqs, target_seqs = df[['seq', 'sst8']][(df.len <= MAX_LEN_FB) & (~df.has_nonstd_aa)].values.T
+
+        # Transform features
+        input_data, tokenizer = transform_sequence(input_seqs)
+        # Transform targets
+        mlb = MultiLabelBinarizer()
+        target_data = mlb.fit_transform(target_seqs)
+
+        X_train, X_test, y_train, y_test = train_test_split(input_data, target_data, test_size=.3, random_state=1)
+        return X_train, X_test, y_train, y_test, tokenizer

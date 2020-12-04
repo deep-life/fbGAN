@@ -1,15 +1,11 @@
 import numpy as np
 import pandas as pd
 import keras
-import matplotlib.pyplot as plt
-from keras.preprocessing import text, sequence
+import tensorflow as tf
+from keras.preprocessing import sequence
 from keras.preprocessing.text import Tokenizer
-from keras.metrics import categorical_accuracy
-from keras.utils import to_categorical
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
-from keras.utils import to_categorical
-import matplotlib.pyplot as plt
 
 from utils.protein_utilities import protein_to_DNA
 from globals import *
@@ -23,20 +19,6 @@ def triplets(sequences):
     Usage: Split protein sequence into triplets of aminoacids
     """
     return np.array([[aminoacids[i:i + 3] for i in range(len(aminoacids))] for aminoacids in sequences])
-
-
-def get_data_for_feedback(path=PATH_DATA, max_len=MAX_LEN_FB):
-    df = pd.read_csv(path)
-    input_seqs, target_seqs = df[['seq', 'sst8']][(df.len <= max_len) & (~df.has_nonstd_aa)].values.T
-
-    # Transform features
-    input_data, tokenizer = transform_sequence(input_seqs)
-    # Transform targets
-    mlb = MultiLabelBinarizer()
-    target_data = mlb.fit_transform(target_seqs)
-
-    X_train, X_test, y_train, y_test = train_test_split(input_data, target_data, test_size=.3, random_state=1)
-    return X_train, X_test, y_train, y_test, tokenizer
 
 
 def transform_sequence(seqs, tokenizer_encoder=None):
