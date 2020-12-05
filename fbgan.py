@@ -11,18 +11,26 @@ from models import Feedback
 
 class FB_GAN():
 
-    def __init__(self, generator_path=None, discriminator_path=None,
-                 fbnet_path=None, features=DESIRED_FEATURES, multip_factor=20, log_id=None):
+    def __init__(self, features=DESIRED_FEATURES, generator_path=None, discriminator_path=None,
+                 fbnet_path=None, multip_factor=20, log_id=None):
+        """
+        Parameters
+        ----------
+        generator_path: str (optional)
+            Path to the weights of a pretrained generator.
+        discriminator_path: str (optional)
+             Path to the weights of a pretrained generator.
+        fbnet_path: str (optional)
+            Path to the saved model.
+        features: list (optional)
+            Features for which to optimize sequences
+        multip_factor: int (optional)
+            Factor indicating how many times best sequences are added to the discriminator at each step.
+        log_id: str (optional)
+            If log_id is provided, history logs during training will be written into "./Experiments/Experiment_{log_id}"
+            else, the history is logged into self.history
         """
 
-        :param generator_path: pretrained generator
-        :param discriminator_path:  pretrained discriminator
-        :param fbnet_path: pretrained feedback
-        :param features: features for which to optimize generator
-        :param multip_factor:
-        :param log_id: provide this if you want to log the experiment results.
-        Results are getting written into "Experiments/Experiment {log_id}"
-        """
         self.GAN = GAN(generator_weights_path=generator_path, discriminator_weights_path=discriminator_path)
         self.FBNet = Feedback(fbnet_path)
         self.tokenizer = self.FBNet.tokenizer
@@ -31,11 +39,13 @@ class FB_GAN():
         self.desired_features = features
         self.multip_factor = multip_factor
         self.data = None
+        self.OneHot = OneHot_Seq(letter_type=TASK_TYPE)
         self.id = log_id
         if self.id:
-            #If experiment is getting logged, initialize files to log it
+            # If experiment is getting logged, initialize files to log it
             self.log_initialize()
-        #self.history = {'D_loss': [], 'G_loss': [], 'average_score': [], 'best_score': [], 'percent_fake': []}
+        else:
+            self.history = {'D_loss': [], 'G_loss': [], 'average_score': [], 'best_score': [], 'percent_fake': []}
 
     def get_scores(self, inputs):
         # convert the DNA sequences to protein sequences
@@ -82,7 +92,25 @@ class FB_GAN():
 
         return best_samples, best_scores
 
-    def train(self, inputs, epochs, step_log=50, steps_per_epoch=10, batch_size=BATCH_SIZE):
+    def train(self, inputs, epochs, step_log=50, batch_size=264, steps_per_epoch=None,):
+        """
+
+        Parameters
+        ----------
+        inputs: ndarray
+            Real one-hot encoded data of shape = (N, N_CHAR, SEQ_LEN)
+        epochs: int (optional)
+            number of epochs for which to train
+        step_log: int (optional)
+            specifies how often steps should be logged into the history or to the external file
+        steps_per_epoch: int (optional)
+            specifies how many steps per each epoch to take
+            if None steps_per_epoch whole dataset will be used for each epoch (step_per_log = len(inputs)//batch_size)
+        batch_size: int (optional)
+            batch size
+        -------
+
+        """
         self.data = inputs
         self.batch_size = batch_size
 
@@ -101,8 +129,7 @@ class FB_GAN():
                 D_loss, GP = self.GAN.D_train_step(sample_batch)
 
                 generated = self.GAN.generate_samples(number=BATCH_SIZE, decoded=False)
-                OneHot = OneHot_Seq(letter_type=TASK_TYPE)
-                decoded_generated = OneHot.onehot_to_seq(generated)
+                decoded_generated = self.OneHot.onehot_to_seq(generated)
                 scores = self.get_scores(decoded_generated)
                 generated = tf.cast(generated, tf.float32)
                 best_samples, best_scores = self.add_samples(generated, scores)
@@ -111,31 +138,39 @@ class FB_GAN():
                     print(
                         f'\tStep {step}:   Generator: {G_loss.numpy()}   Discriminator: {D_loss.numpy()}   Samples: {len(self.data)}')
 
-                    #self.history['D_loss'].append(D_loss.numpy())
-                    #self.history['G_loss'].append(G_loss.numpy())
-
                     print('\tBest scores per feature: ', end=' ')
                     best_per_feature = self.get_score_per_feature(best_scores)
                     pprint = [f'{sc[0]}: {sc[1]}%' for sc in best_per_feature]
                     print(*pprint, sep=' ')
-                    #self.history['best_score'].append(best_per_feature)
 
                     print('\tAverage scores per feature: ', end=' ')
                     average_per_feature = self.get_score_per_feature(scores)
                     pprint = [f'{sc[0]}: {sc[1]}%' for sc in average_per_feature]
                     print(*pprint, sep=' ')
-                    #self.history['average_score'].append(average_per_feature)
+
                     percent_fake = int(((len(self.data) - len(inputs)) / len(self.data)) * 100)
-                    self.log_train(best_per_feature,average_per_feature,G_loss,D_loss,percent_fake)
+
+                    if self.id:
+                        self.log_train(best_per_feature, average_per_feature, G_loss, D_loss, percent_fake)
+
+                    else:
+                        self.history['D_loss'].append(D_loss.numpy())
+                        self.history['G_loss'].append(G_loss.numpy())
+                        self.history['best_score'].append(best_per_feature)
+                        self.history['average_score'].append(average_per_feature)
+
                 step += 1
-            #self.history['percent_fake'].append(percent_fake)
+
+            if not self.id:
+                self.history['percent_fake'].append(percent_fake)
+
             print(f'\tPercent of the fake samples in the discriminator: {percent_fake}%.')
 
         if self.id:
             # If you are in a log mode - generate resulting sequences. Store them in Experiments folder
             exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment {}".format(self.id))
-            with open(exp_folder+"/seq_after.txt".format(self.id), 'w+') as f:
-                for line in self.GAN.generate_samples(number = 100, decoded=True):
+            with open(exp_folder + "/seq_after.txt".format(self.id), 'w+') as f:
+                for line in self.GAN.generate_samples(number=100, decoded=True):
                     f.write(line[0])
                     f.write("\n")
 
@@ -144,43 +179,56 @@ class FB_GAN():
         dataset = dataset.shuffle(inputs.shape[0], seed=0).batch(self.batch_size, drop_remainder=True)
         return dataset
 
-    def log_train(self,best,average,g_loss,d_loss,fake):
+    def log_train(self, best, average, g_loss, d_loss, fake):
         """
 
-        :param best: best scores per feature computed during training
-        :param average: average scores per feature computed during training
-        :param g_loss: loss of generator
-        :param d_loss: loss of discriminator
-        :param fake: percent of fake sequences
-        :return:None; write to "Experiment/Experiment {id} " folder
+        Parameters
+        ----------
+        best:
+            best scores per feature computed during training
+        average
+            average scores per feature computed during training
+        g_loss
+            loss of generator
+        d_loss
+            loss of discriminator
+        fake
+            percent of fake sequences
+
+        Returns
+        -------
+        None
+            write to "Experiment/Experiment_{id} " folder
+
         """
-        exp_folder = os.path.join(ROOT_PATH,"Experiments/Experiment {}".format(self.id))
-        with open(exp_folder+"/GAN_loss.csv",'a') as f:
+
+        exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment_{}".format(self.id))
+        with open(exp_folder + "/GAN_loss.csv", 'a') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow(
                 [g_loss.numpy(), d_loss.numpy(), fake])
 
-        with open(exp_folder+"/Average_Scores.csv".format(self.id),'a') as f:
+        with open(exp_folder + "/Average_Scores.csv".format(self.id), 'a') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([sc[1] for sc in average])
 
-        with open(exp_folder+"/Best_Scores.csv".format(self.id),'a') as f:
+        with open(exp_folder + "/Best_Scores.csv".format(self.id), 'a') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([sc[1] for sc in best])
 
     def log_initialize(self):
-        exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment {}".format(self.id))
+        exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment_{}".format(self.id))
         os.makedirs(exp_folder)
-        with open(exp_folder+"/seq_before.txt".format(self.id), 'w+') as f:
-            for line in self.GAN.generate_samples(number = 100, decoded=True):
+        with open(exp_folder + "/seq_before.txt".format(self.id), 'w+') as f:
+            for line in self.GAN.generate_samples(number=100, decoded=True):
                 f.write(line[0])
                 f.write("\n")
-        with open(exp_folder+"/GAN_loss.csv".format(self.id), 'w+') as f:
+        with open(exp_folder + "/GAN_loss.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
-            writer.writerow(['g_loss','d_loss','percent_fake'])
-        with open(exp_folder+"/Best_Scores.csv".format(self.id), 'w+') as f:
+            writer.writerow(['g_loss', 'd_loss', 'percent_fake'])
+        with open(exp_folder + "/Best_Scores.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([x for x in self.desired_features])
-        with open(exp_folder+"/Average_Scores.csv".format(self.id), 'w+') as f:
+        with open(exp_folder + "/Average_Scores.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([x for x in self.desired_features])
