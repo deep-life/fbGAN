@@ -84,7 +84,7 @@ class FB_GAN():
 
     def train(self, inputs, epochs, step_log=50, steps_per_epoch=10, batch_size=BATCH_SIZE):
         self.data = inputs
-        self.batch_size = BATCH_SIZE
+        self.batch_size = batch_size
 
         for epoch in range(epochs):
 
