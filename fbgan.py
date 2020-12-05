@@ -13,7 +13,7 @@ from models import Feedback
 class FB_GAN():
 
     def __init__(self, features=DESIRED_FEATURES, generator_path=None, discriminator_path=None,
-                 fbnet_path=None, multip_factor=20, log_history=False, log_id=None):
+                 fbnet_path=None, multip_factor=20, log_history=False, log_id=None, score_threshold=0.75):
         """
         Parameters
         ----------
@@ -39,6 +39,7 @@ class FB_GAN():
                                      'T'])  # order of labels as output by Multilabel binarizer - don't change!
         self.desired_features = features
         self.multip_factor = multip_factor
+        self.score_threshold = score_threshold
         self.data = None
         self.OneHot = OneHot_Seq(letter_type=TASK_TYPE)
         self.id = log_id
@@ -75,8 +76,8 @@ class FB_GAN():
 
         return score_per_feature
 
-    def add_samples(self, generated, scores, score_threshold=0.75, replace=False):
-        best_index = scores > score_threshold
+    def add_samples(self, generated, scores, replace=False):
+        best_index = scores > self.score_threshold
         best_samples = []
         best_scores = []
         for i in range(len(best_index)):
@@ -117,10 +118,15 @@ class FB_GAN():
         self.batch_size = batch_size
 
         if self.id:
-            params = {'batch_size': self.batch_size, 'epochs': epochs,
-                      'step_log': step_log, 'steps_per_epoch': steps_per_epoch,
+            params = {'desired features': self.desired_features,
+                      'multip_factor': self.multip_factor,
+                      'batch_size': self.batch_size,
+                      'epochs': epochs,
+                      'step_log': step_log,
+                      'steps_per_epoch': steps_per_epoch,
+                      'threshold': self.score_threshold,
                       'real samples': len(inputs)}
-            with open(self.exp_folder + "/Parameters.txt".format(self.id), 'a') as f:
+            with open(self.exp_folder + "/Parameters.txt".format(self.id), 'w+') as f:
                 f.write(json.dumps(params))
 
         for epoch in range(epochs):
@@ -188,7 +194,26 @@ class FB_GAN():
         return dataset
 
     def log_train(self, best, average, g_loss, d_loss, fake):
+        """
+        Parameters
+        ----------
+        best:
+            best scores per feature computed during training
+        average:
+            average scores per feature computed during training
+        g_loss
+            loss of generator
+        d_loss
+            loss of discriminator
+        fake
+            percent of fake sequences
 
+        Returns
+        -------
+        None
+            write to "Experiment/Experiment_{id} " folder
+
+        """
         with open(self.exp_folder + "/GAN_loss.csv", 'a') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow(
@@ -224,8 +249,3 @@ class FB_GAN():
         with open(self.exp_folder + "/Average_Scores.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([x for x in self.desired_features])
-
-        with open(self.exp_folder + "/Parameters.txt".format(self.id), 'w+') as f:
-            params = {'desired features': self.desired_features, 'multip_factor': self.multip_factor}
-            with open(self.exp_folder + "/Parameters.txt".format(self.id), 'w+') as f:
-                f.write(json.dumps(params))
