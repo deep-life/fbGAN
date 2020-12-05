@@ -1,4 +1,5 @@
 import numpy as np
+import json
 import tensorflow as tf
 import keras
 import csv
@@ -12,7 +13,7 @@ from models import Feedback
 class FB_GAN():
 
     def __init__(self, features=DESIRED_FEATURES, generator_path=None, discriminator_path=None,
-                 fbnet_path=None, multip_factor=20, log_history = False, log_id=None):
+                 fbnet_path=None, multip_factor=20, log_history=False, log_id=None):
         """
         Parameters
         ----------
@@ -93,7 +94,7 @@ class FB_GAN():
 
         return best_samples, best_scores
 
-    def train(self, inputs, epochs, step_log=50, batch_size=BATCH_SIZE, steps_per_epoch=None,):
+    def train(self, inputs, epochs, step_log=50, batch_size=BATCH_SIZE, steps_per_epoch=None, ):
         """
 
         Parameters
@@ -114,6 +115,13 @@ class FB_GAN():
         """
         self.data = inputs
         self.batch_size = batch_size
+
+        if self.id:
+            params = {'batch_size': self.batch_size, 'epochs': epochs,
+                      'step_log': step_log, 'steps_per_epoch': steps_per_epoch,
+                      'real samples': len(inputs)}
+            with open(self.exp_folder + "/Parameters.txt".format(self.id), 'a') as f:
+                f.write(json.dumps(params))
 
         for epoch in range(epochs):
 
@@ -164,12 +172,12 @@ class FB_GAN():
 
                 step += 1
 
+            percent_fake = int(((len(self.data) - len(inputs)) / len(self.data)) * 100)
             print(f'\tPercent of the fake samples in the discriminator: {percent_fake}%.')
 
         if self.id:
             # If you are in a log mode - generate resulting sequences. Store them in Experiments folder
-            exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment {}".format(self.id))
-            with open(exp_folder + "/seq_after.txt".format(self.id), 'w+') as f:
+            with open(self.exp_folder + "/seq_after.txt".format(self.id), 'w+') as f:
                 for line in self.GAN.generate_samples(number=100, decoded=True):
                     f.write(line[0])
                     f.write("\n")
@@ -180,56 +188,44 @@ class FB_GAN():
         return dataset
 
     def log_train(self, best, average, g_loss, d_loss, fake):
-        """
-        Parameters
-        ----------
-        best:
-            best scores per feature computed during training
-        average:
-            average scores per feature computed during training
-        g_loss
-            loss of generator
-        d_loss
-            loss of discriminator
-        fake
-            percent of fake sequences
 
-        Returns
-        -------
-        None
-            write to "Experiment/Experiment_{id} " folder
-
-        """
-        exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment_{}".format(self.id))
-        with open(exp_folder + "/GAN_loss.csv", 'a') as f:
+        with open(self.exp_folder + "/GAN_loss.csv", 'a') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow(
                 [g_loss.numpy(), d_loss.numpy(), fake])
 
-        with open(exp_folder + "/Average_Scores.csv".format(self.id), 'a') as f:
+        with open(self.exp_folder + "/Average_Scores.csv".format(self.id), 'a') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([sc[1] for sc in average])
 
-        with open(exp_folder + "/Best_Scores.csv".format(self.id), 'a') as f:
+        with open(self.exp_folder + "/Best_Scores.csv".format(self.id), 'a') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([sc[1] for sc in best])
 
     def log_initialize(self):
-        exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment_{}".format(self.id))
+        self.exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment_{}".format(self.id))
 
-        if not os.path.exists(exp_folder):
-            os.makedirs(exp_folder)
+        if not os.path.exists(self.exp_folder):
+            os.makedirs(self.exp_folder)
 
-        with open(exp_folder + "/seq_before.txt".format(self.id), 'w+') as f:
+        with open(self.exp_folder + "/seq_before.txt".format(self.id), 'w+') as f:
             for line in self.GAN.generate_samples(number=100, decoded=True):
                 f.write(line[0])
                 f.write("\n")
-        with open(exp_folder + "/GAN_loss.csv".format(self.id), 'w+') as f:
+
+        with open(self.exp_folder + "/GAN_loss.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow(['g_loss', 'd_loss', 'percent_fake'])
-        with open(exp_folder + "/Best_Scores.csv".format(self.id), 'w+') as f:
+
+        with open(self.exp_folder + "/Best_Scores.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([x for x in self.desired_features])
-        with open(exp_folder + "/Average_Scores.csv".format(self.id), 'w+') as f:
+
+        with open(self.exp_folder + "/Average_Scores.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([x for x in self.desired_features])
+
+        with open(self.exp_folder + "/Parameters.txt".format(self.id), 'w+') as f:
+            params = {'desired features': self.desired_features, 'multip_factor': self.multip_factor}
+            with open(self.exp_folder + "/Parameters.txt".format(self.id), 'w+') as f:
+                f.write(json.dumps(params))
