@@ -25,8 +25,12 @@ n_tags = 8  # number of classes in 8-state prediction
 
 # UPDATE THE PATHS
 
+#Indicate where your directory is located
+#Used for logging also
+ROOT_PATH = '/content/gdrive/My Drive/fbGAN/'
+
 # Select a path where your data are stores
-PATH_DATA = '2018-06-06-ss.cleaned.csv'
+PATH_DATA = '/content/gdrive/My Drive/fbGAN/2018-06-06-ss.cleaned.csv'
 
 # Select paths to the saved weights of the gan and feedback
 PATH_G = 'Weights/Generator'

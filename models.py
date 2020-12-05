@@ -98,13 +98,13 @@ class Feedback():
         :param PATH_FB: path where pretrained model is saved;
          if no parameter is given, model is initialized from scratch
         """
+        self.X_train, self.X_test, self.y_train, self.y_test, self.tokenizer = self.get_data_for_feedback()
+        self.n_words = len(self.tokenizer.word_index) + 1
         if PATH_FB:
             self.model = tf.keras.models.load_model(PATH_FB)
             return
-        self.X_train, self.X_test, self.y_train, self.y_test, self.tokenizer = self.get_data_for_feedback()
-        self.n_words = len(self.tokenizer.word_index) + 1
         input = Input(shape=(MAX_LEN_PROTEIN,))
-        x = Embedding(input_dim=n_words, output_dim=128, input_length=MAX_LEN_PROTEIN)(input)
+        x = Embedding(input_dim=self.n_words, output_dim=128, input_length=MAX_LEN_PROTEIN)(input)
         x = LayerNormalization()(x)
         x = Bidirectional(LSTM(units=128, return_sequences=True, use_bias=True))(x)
         x = Bidirectional(LSTM(units=128, return_sequences=True, use_bias=True))(x)
