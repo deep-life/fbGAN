@@ -60,7 +60,7 @@ def plot_fbGAN_scores(scores, best_scores=None, epochs=None):
     :return:
         None
     """
-    colors = np.array(['navy', 'darkmagenta', 'green', 'gold', 'salmon', 'silver', 'indianred', 'darkolive'])
+    colors = ['navy', 'darkmagenta', 'green', 'gold', 'salmon', 'silver', 'indianred', 'darkolive']
     features = scores[0, :, 0]
     fig, ax = plt.subplots()
     lines = []
