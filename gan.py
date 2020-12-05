@@ -145,8 +145,8 @@ class GAN:
         return best_seq
 
     def plot_history(self):
-        D_losses = np.array(self.history['D_losses'])
-        G_losses = np.array(self.history['G_losses'])
+        D_losses = np.array(self.history['D_loss'])
+        G_losses = np.array(self.history['G_loss'])
 
         plt.plot(np.arange(D_losses.shape[0]), D_losses, label='Discriminator loss')
         plt.plot(np.arange(G_losses.shape[0]), G_losses, label='Generator loss')

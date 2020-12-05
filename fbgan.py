@@ -230,8 +230,10 @@ class FB_GAN():
     def log_initialize(self):
         self.exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment_{}".format(self.id))
 
-        if not os.path.exists(self.exp_folder):
+        try:
             os.makedirs(self.exp_folder)
+        except:
+            raise Warning('Provide new id for the experiment.')
 
         with open(self.exp_folder + "/seq_before.txt".format(self.id), 'w+') as f:
             for line in self.GAN.generate_samples(number=100, decoded=True):
@@ -249,3 +251,4 @@ class FB_GAN():
         with open(self.exp_folder + "/Average_Scores.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([x for x in self.desired_features])
+

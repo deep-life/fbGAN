@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import seaborn as sns
 import numpy as np
+import json
 
 
 #Plot style
@@ -44,24 +45,9 @@ def plot_history(history,name):
     plt.show()
 
 
-def plot_fbGAN_scores(scores, best_scores=None, epochs=None):
-    """
-    Plots lines for each featuer in scores array. If epochs is provided, steps in each epoch are averaged out.
-    For example, if there are 300 steps total and there was 10 epochs, moving interval of 10 will be averaged
-    and the final sequence is of length 30.
+def plot_fbGAN_scores(features, scores, best_scores=None, save_path = None, epochs=None):
 
-    If best scores are provided, plotst them in dashed lines on the same graph.
-
-    :param scores: (ndarray, list) Output of the fbGAN log with feature and score per step.  For example:
-                                    np.array( [[['C', 70],['H', 30],['E', 10]],
-                                               [['C', 97],['H', 71],['E', 50]])
-    :param best_scores: (ndarray, list) Output of the fbGAN log with feature and score per step.
-    :param epochs: Number of epochs for which to average the steps.
-    :return:
-        None
-    """
     colors = ['navy', 'darkmagenta', 'green', 'gold', 'salmon', 'silver', 'indianred', 'darkolive']
-    features = scores[0, :, 0]
     fig, ax = plt.subplots()
     lines = []
 
@@ -69,13 +55,13 @@ def plot_fbGAN_scores(scores, best_scores=None, epochs=None):
         interv = int(len(scores) / epochs)
 
     for i, feature in enumerate(features):
-        scr = scores[:, i, 1].astype(float)
+        scr = scores[:, i].astype(float)
         if epochs:
             scr = [np.mean(scr[e * interv:(e + 1) * interv]) for e in range(epochs)]
         l1 = ax.plot(np.arange(len(scr)), scr, label=feature, color=colors[i])
 
         if best_scores is not None:
-            best = best_scores[:, i, 1].astype(float)
+            best = best_scores[:, i].astype(float)
             if epochs:
                 best = [np.mean(best[e * interv:(e + 1) * interv]) for e in range(epochs)]
             l2 = ax.plot(np.arange(len(best)), best, color=colors[i], linestyle=':', alpha=0.4)
@@ -86,12 +72,61 @@ def plot_fbGAN_scores(scores, best_scores=None, epochs=None):
         legend_dash = ax.legend(np.array(lines).ravel(), ['average', 'best'], bbox_to_anchor=(1, 1))
         plt.gca().add_artist(legend_dash)
 
+    plt.xlabel('Steps')
     if epochs:
         plt.xlabel('Epochs')
-    else:
-        plt.xlabel('Steps')
 
     plt.legend(bbox_to_anchor=(1, 0.75))
     plt.ylabel('Score (%)')
     plt.title('Score history')
+
+    if save_path:
+        plt.savefig(os.path.join(save_path,'scores.png'))
     plt.show()
+
+
+def plot_gan_loss(g_loss, d_loss, save_path=None, epochs=None):
+    if epochs:
+        interv = int(len(g_loss) / epochs)
+        d_loss = [np.mean(d_loss[e * interv: (e + 1) * interv]) for e in range(epochs)]
+        g_loss = [np.mean(g_loss[e * interv: (e + 1) * interv]) for e in range(epochs)]
+
+    plt.plot(np.arange(len(d_loss)), d_loss, label='Discriminator loss', color='navy')
+    plt.plot(np.arange(len(g_loss)), g_loss, label='Generator loss', color='darkmagenta')
+    plt.ylabel('Loss')
+    plt.xlabel(f'Steps')
+    plt.legend()
+    if save_path:
+        save_path = os.path.join(save_path, 'gan_loss.png')
+        plt.savefig(save_path)
+
+    if epochs:
+        plt.xlabel(f'Epochs')
+    plt.show()
+
+
+
+def analyze_experiment(path):
+    params_path = os.path.join(path, 'Parameters.txt')
+    with open(params_path) as json_file:
+        parameters = json.load(json_file)
+    print(parameters)
+
+    epochs = parameters['epochs']
+    features = parameters['desired features']
+
+    gan_loss = pd.read_csv(os.path.join(path, 'GAN_loss.csv'))
+
+    g_loss = gan_loss['g_loss']
+    d_loss = gan_loss['d_loss']
+    p_fake = gan_loss['percent_fake']
+
+    plot_gan_loss(g_loss, d_loss, epochs=epochs, save_path=EX_PATH)
+    plot_gan_loss(g_loss, d_loss, epochs=None, save_path=EX_PATH)
+
+    avg_score = pd.read_csv(os.path.join(path, 'Average_Scores.csv')).to_numpy()
+    best_score = pd.read_csv(os.path.join(path, 'Best_Scores.csv')).to_numpy()
+
+    plot_fbGAN_scores(features, save_path=EX_PATH, scores=avg_score, best_scores=best_score, epochs=epochs)
+
+
