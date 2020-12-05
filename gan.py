@@ -124,8 +124,8 @@ class GAN:
 
                 if step % self.step_log == 0:
                     example_sequence = self.get_highest_scoring()
-                    self.history["G_losses"].append(G_loss.numpy())
-                    self.history["D_losses"].append(D_loss.numpy())
+                    self.history["G_loss"].append(G_loss.numpy())
+                    self.history["D_loss"].append(D_loss.numpy())
                     self.history['gradient_penalty'].append(GP.numpy())
                     self.history['sequences'].append(example_sequence)
                     print(
