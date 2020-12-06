@@ -70,12 +70,12 @@ def plot_experiment(website=False, id="trial", FONT="Didot"):
 
     color_map = {'G': '#AC90CE', 'C': '#CB90CE', 'H': '#CE90B2', 'E': '#CE9093',
                  'I': '#CEAC90', 'B': '#CECB90', 'T': '#90C4CE', 'S': '#90A5CE'}
-
     # Initialize subplots
+    layout = [[{},{}],[{"colspan":2},None]]
     fig = tools.make_subplots(rows=2, cols=2,
                               subplot_titles=("GAN loss", "Scores",
-                                              "Property distribution", "Total count of properties"),
-                              horizontal_spacing=0.1)
+                                              "Amino acid count"),
+                              horizontal_spacing=0.08,vertical_spacing=0.126,specs=layout)
     # Generator Loss
     trace1 = go.Scatter(x=steps, y=losses.g_loss, name="Generator",
                         marker_color='#74b4d4', legendgroup='group1')
@@ -108,21 +108,21 @@ def plot_experiment(website=False, id="trial", FONT="Didot"):
                     name='Before training', legendgroup='group3', marker_color='#84C2DA')
     trace4 = go.Bar(x=list(after.keys()), y=list(after.values()),
                     name='After training', legendgroup='group3', marker_color='#90AFCE')
-    fig.add_trace(trace3, row=2, col=2)
-    fig.add_trace(trace4, row=2, col=2)
+    fig.add_trace(trace3, row=2, col=1)
+    fig.add_trace(trace4, row=2, col=1)
 
     # Distribution of features before and after training
 
-    d_before, d_after = get_score_distribution(id)
-    for feature in d_before.columns:
-        trace_before = go.Box(
-            y=d_before[feature], name=feature, showlegend=False,
-            legendgroup='group3', marker_color='#84C2DA')
-        trace_after = go.Box(
-            y=d_after[feature], name=feature, showlegend=False,
-            legendgroup='group3', marker_color='#90AFCE')
-        fig.add_trace(trace_before, row=2, col=1)
-        fig.add_trace(trace_after, row=2, col=1)
+    # d_before, d_after = get_score_distribution(id)
+    # for feature in d_before.columns:
+    #     trace_before = go.Box(
+    #         y=d_before[feature], name=feature, showlegend=False,
+    #         legendgroup='group3', marker_color='#84C2DA')
+    #     trace_after = go.Box(
+    #         y=d_after[feature], name=feature, showlegend=False,
+    #         legendgroup='group3', marker_color='#90AFCE')
+    #     fig.add_trace(trace_before, row=2, col=1)
+    #     fig.add_trace(trace_after, row=2, col=1)
 
     fig.add_annotation(text='Parameters:<br>' + parameters,
                        align='left',
@@ -134,13 +134,13 @@ def plot_experiment(website=False, id="trial", FONT="Didot"):
     # set x axis
     fig.update_xaxes(title_text="Steps", row=1, col=1)
     fig.update_xaxes(title_text="Steps", row=1, col=2)
-    fig.update_xaxes(title_text="Property", row=2, col=1)
-    fig.update_xaxes(title_text="Property", row=2, col=2)
+    fig.update_xaxes(title_text="Amino acids", row=2, col=1)
+    fig.update_xaxes(title_text="Amino acids", row=2, col=2)
     # set y axis
     fig.update_yaxes(title_text="Loss", row=1, col=1)
     fig.update_yaxes(title_text="%", row=1, col=2)
-    fig.update_yaxes(title_text="Count per sequence", row=2, col=1)
-    fig.update_layout(height=600, width=900,
+    fig.update_yaxes(title_text="Count", row=2, col=1)
+    fig.update_layout(height=700, width=900,
                       title={'text': 'Experiment {}'.format(id), 'y': 0.9, 'x': 0.45},
                       font_family=FONT, title_font_family=FONT, paper_bgcolor='rgba(0,0,0,0)', boxmode='group')
 

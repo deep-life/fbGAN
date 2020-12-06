@@ -184,8 +184,9 @@ class FB_GAN():
         if self.id:
             # If you are in a log mode - generate resulting sequences. Store them in Experiments folder
             with open(self.exp_folder + "/seq_after.txt".format(self.id), 'w+') as f:
-                for line in self.GAN.generate_samples(number=100, decoded=True):
-                    f.write(line[0])
+                DNAs = self.GAN.generate_samples(number=100, decoded=True)
+                for line in DNA_to_protein(DNAs):
+                    f.write(line)
                     f.write("\n")
 
     def create_dataset(self, inputs):
@@ -236,8 +237,9 @@ class FB_GAN():
             raise Warning('Provide new id for the experiment.')
 
         with open(self.exp_folder + "/seq_before.txt".format(self.id), 'w+') as f:
-            for line in self.GAN.generate_samples(number=100, decoded=True):
-                f.write(line[0])
+            DNAs = self.GAN.generate_samples(number=100, decoded=True)
+            for line in DNA_to_protein(DNAs):
+                f.write(line)
                 f.write("\n")
 
         with open(self.exp_folder + "/GAN_loss.csv".format(self.id), 'w+') as f:
