@@ -6,6 +6,8 @@ from utils.protein_utilities import *
 from utils.data_utilities import *
 from globals import *
 
+# Adapted from https://github.com/igul222/improved_wgan_training/blob/master/gan_language.py 
+
 class GAN:
 
     def __init__(self, batch_size=BATCH_SIZE, discriminator_steps=0, lr=0.0002,
