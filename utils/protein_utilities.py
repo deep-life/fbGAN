@@ -63,10 +63,8 @@ def protein_to_DNA(protein_sequences):
 
 def translate(seq):
     table = DNA_protein_MAP
-    table['TAA'] = ''
-    table['TGA'] = ''
-    table['TAG'] = ''
-
+    table['TAA'], table['TGA'], table['TAG'] = '','',''
+   
     protein = ""
     seq = seq[0].split('P')[0]
     for i in range(0, len(seq), 3):
