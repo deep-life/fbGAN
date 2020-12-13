@@ -9,6 +9,7 @@ from utils.protein_utilities import DNA_to_protein
 from utils.data_utilities import triplets, OneHot_Seq
 from models import Feedback
 
+# Adapted from https://github.com/av1659/fbgan
 
 class FB_GAN():
 
