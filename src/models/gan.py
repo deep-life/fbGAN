@@ -2,9 +2,9 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
 from models import Generator, Discriminator
-from utils.protein_utilities import *
-from utils.data_utilities import *
-from globals import *
+from src.utils.protein_utilities import *
+from src.utils.data_utilities import *
+from src.globals import *
 
 # Adapted from https://github.com/igul222/improved_wgan_training/blob/master/gan_language.py 
 

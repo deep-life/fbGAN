@@ -1,8 +1,5 @@
 import os
 
-####################################################################################
-# GLOBAL VARIABLES
-####################################################################################
 
 DESIRED_FEATURES = ['C', 'H', 'E']
 
@@ -24,15 +21,12 @@ MAX_LEN_FB = 128  # max length of sequence we want to consider for training
 n_tags = 8  # number of classes in 8-state prediction
 
 # UPDATE THE PATHS
-
-#Indicate where your directory is located
-#Used for logging also
 ROOT_PATH = '/content/gdrive/My Drive/fbGAN/'
 
 # Select a path where your data are stores
 PATH_DATA = '/content/gdrive/My Drive/fbGAN/2018-06-06-ss.cleaned.csv'
 
 # Select paths to the saved weights of the gan and feedback
-PATH_G = 'Weights/Generator'
-PATH_D = 'Weights/Discriminator'
-PATH_FB = 'Weights/Feedback'
+PATH_G = '../weights/Generator'
+PATH_D = '../weights/Discriminator'
+PATH_FB = '../weights/Feedback'

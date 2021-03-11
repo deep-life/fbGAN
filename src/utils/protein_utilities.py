@@ -58,9 +58,6 @@ def protein_to_DNA(protein_sequences):
     return DNA_sequences
 
 
-
-
-
 def translate(seq):
     table = DNA_protein_MAP
     table['TAA'], table['TGA'], table['TAG'] = '','',''

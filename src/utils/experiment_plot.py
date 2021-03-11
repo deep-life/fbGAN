@@ -6,7 +6,7 @@ from plotly.offline import iplot
 from plotly import tools
 from collections import Counter
 import re
-from globals import *
+from src.globals import *
 
 
 def get_score_counts(id='trial'):

@@ -4,17 +4,25 @@ import tensorflow as tf
 import keras
 import csv
 from gan import GAN
-from globals import *
-from utils.protein_utilities import DNA_to_protein
-from utils.data_utilities import triplets, OneHot_Seq
+from src.globals import *
+from src.utils.protein_utilities import DNA_to_protein
+from src.utils.data_utilities import triplets, OneHot_Seq
 from models import Feedback
+
 
 # Adapted from https://github.com/igul222/improved_wgan_training/blob/master/gan_language.py and https://github.com/av1659/fbgan
 
 class FB_GAN():
 
-    def __init__(self, features=DESIRED_FEATURES, generator_path=None, discriminator_path=None,
-                 fbnet_path=None, multip_factor=20, log_history=False, log_id=None, score_threshold=0.75):
+    def __init__(self,
+                 features=DESIRED_FEATURES,
+                 generator_path=None,
+                 discriminator_path=None,
+                 fbnet_path=None,
+                 multip_factor=20,
+                 log_history=False,
+                 log_id=None,
+                 score_threshold=0.75):
         """
         Parameters
         ----------
@@ -230,6 +238,7 @@ class FB_GAN():
             writer.writerow([sc[1] for sc in best])
 
     def log_initialize(self):
+        # TODO: Make root directory automatically recognized (without the need to change in globals.py file)
         self.exp_folder = os.path.join(ROOT_PATH, "Experiments/Experiment_{}".format(self.id))
 
         try:
@@ -254,4 +263,3 @@ class FB_GAN():
         with open(self.exp_folder + "/Average_Scores.csv".format(self.id), 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow([x for x in self.desired_features])
-

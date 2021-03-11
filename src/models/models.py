@@ -5,8 +5,8 @@ from tensorflow.keras.layers import Conv1D, Input, LSTM, Embedding, Dense, TimeD
     LayerNormalization
 from sklearn.preprocessing import MultiLabelBinarizer
 from tensorflow.keras.models import Model
-from globals import *
-from utils.data_utilities import *
+from src.globals import *
+from src.utils.data_utilities import *
 
 def softmax(logits):
     shape = tf.shape(logits)

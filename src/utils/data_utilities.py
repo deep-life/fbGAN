@@ -7,8 +7,8 @@ from keras.preprocessing.text import Tokenizer
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
 
-from utils.protein_utilities import protein_to_DNA
-from globals import *
+from src.utils.protein_utilities import protein_to_DNA
+from src.globals import *
 
 
 def triplets(sequences):
