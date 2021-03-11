@@ -10,7 +10,7 @@ For more information, check out: https://deep-life.github.io .
 To get the code clone the repository. The necessary packages can be installed by running the following commands in the same directory.
 
     git clone https://github.com/deep-life/fbGAN.git
-    cd TimeSeriesConvNet
+    cd fbGAN
     pip install -r requirements.txt
     
 ### Run the model
